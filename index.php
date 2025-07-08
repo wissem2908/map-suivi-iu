@@ -31,6 +31,15 @@
     .leaflet-popup-tip {
       background-color:rgb(83, 13, 13);
     }
+    .map-title {
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffcc66; /* dark orange */
+  padding: 5px 8px;
+  border-radius: 8px;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 12px;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+}
   </style>
 </head>
 <body>
@@ -50,6 +59,16 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   maxZoom: 18
 }).addTo(map);
 
+/*************************************************************** */
+const titleControl = L.control({ position: 'topright' });
+
+titleControl.onAdd = function () {
+  const div = L.DomUtil.create('div', 'map-title');
+  div.innerHTML = "<h2>Système de Visualisation des Études Urbaines (PDAU & POS)</h2>";
+  return div;
+};
+
+titleControl.addTo(map);
 
   let layer1, layer2, layer3, layer4;
   let layersLoaded = 0;
