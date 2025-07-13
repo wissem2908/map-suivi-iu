@@ -7,13 +7,14 @@
   
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-  
   <!-- jQuery -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
-
+  <script src="https://cdn.maptiler.com/maptiler-sdk-js/v3.5.0/maptiler-sdk.umd.min.js"></script>
+  <link href="https://cdn.maptiler.com/maptiler-sdk-js/v3.5.0/maptiler-sdk.css" rel="stylesheet" />
+  <script src="https://cdn.maptiler.com/leaflet-maptilersdk/v4.1.0/leaflet-maptilersdk.umd.min.js"></script>
+   
   <style>
     html, body {
       height: 100%;
@@ -25,7 +26,6 @@
       height: 100vh;
     }
 
-    /* Layer Buttons */
     #layer-buttons {
       position: absolute;
       top: 15px;
@@ -37,7 +37,6 @@
       display: flex;
       gap: 6px;
     }
-
     #layer-buttons button {
       background: #333;
       color: #ffa500;
@@ -48,17 +47,14 @@
       font-weight: bold;
       transition: background 0.3s;
     }
-
     #layer-buttons button:hover {
       background: #555;
     }
-
     #layer-buttons button.active {
       background: #ffa500;
       color: #111;
     }
 
-    /* Popup styling */
     .leaflet-popup-content-wrapper {
       background-color: #2c2c2c;
       color: #fff;
@@ -72,7 +68,7 @@
 </head>
 <body>
 
-<!-- Buttons to toggle layers -->
+<!-- Layer Buttons -->
 <div id="layer-buttons">
   <button data-layer="wilaya">Wilaya</button>
   <button data-layer="commune">Commune</button>
@@ -80,7 +76,6 @@
   <button data-layer="pos">POS</button>
 </div>
 
-<!-- Map Container -->
 <div id="map"></div>
 
 <script>
@@ -88,16 +83,15 @@
     center: [30, 5],
     zoom: 5,
     attributionControl: false,
-     zoomControl: false // disables the zoom buttons
+    zoomControl: false // disables the zoom buttons
   });
 
-
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; CartoDB',
-  subdomains: 'abcd',
-  maxZoom: 18
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri',
+  maxZoom: 16
 }).addTo(map);
-  // Format date helper
+
+
   function formatDate(timestamp) {
     if (!timestamp) return "N/A";
     const date = new Date(timestamp);
@@ -107,41 +101,54 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   let layer1, layer2, layer3, layer4;
   let activeLayer = null;
 
-  // Load GeoJSON files
+  // Western Sahara boundary (separate from POS)
+  let westernSaharaLayer = null;
+  $.getJSON('geojson/M_Final.geojson', function(data) {
+    westernSaharaLayer = L.geoJSON(data, {
+      style: { color: "#333", weight: 1, fillOpacity: 0 }
+    }).addTo(map);
+  });
+
+  // Wilaya
   $.getJSON('geojson/wilaya.geojson', function(data) {
     layer1 = L.geoJSON(data, {
       style: { color: "#e74c3c", weight: 2, fillOpacity: 0.1 }
     });
   });
 
+  // Commune
   $.getJSON('geojson/Commune.geojson', function(data) {
     layer2 = L.geoJSON(data, {
       style: { color: "#3498db", weight: 2, fillOpacity: 0.1 }
     });
   });
 
+  // PDAU
   $.getJSON('geojson/Pdau.geojson', function(data) {
     layer3 = L.geoJSON(data, {
       style: { color: "#2ecc71", weight: 2, fillOpacity: 0.1 },
       onEachFeature: function (feature, layer) {
         const p = feature.properties;
-        const content = `
-          <div style="font-size: 13px; line-height: 1.4; color: #fff;">
-            <h4 style="margin:0 0 8px; color:#2ecc71;">📄 PDAU</h4>
-            <strong>Commune:</strong> ${p.commune_1}<br>
-            <strong>Bureau:</strong> ${p.bureau_det}<br>
-            <strong>Type étude:</strong> ${p.etude}<br>
-            <strong>État:</strong> ${p.etat_d_ava}<br>
-            <strong>Créé par:</strong> ${p.created_us}<br>
-            <strong>Date création:</strong> ${formatDate(p.created_da)}<br>
-            <strong>Dernière édition:</strong> ${p.last_edite}<br>
-            <strong>Surface:</strong> ${p.st_area_sh}
-          </div>`;
+   const content = `
+  <div style="font-family: 'Segoe UI', sans-serif; font-size: 13px; color: #eee; background: #1e1e1e; padding: 12px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.6); max-width: 250px;">
+    <div style="margin-bottom: 8px; border-bottom: 1px solid #2ecc71;">
+      <h4 style="margin: 0; font-size: 15px; color: #2ecc71;">PDAU Information</h4>
+    </div>
+    <div><span style="color:#aaa;">Commune:</span> <strong>${p.commune_1}</strong></div>
+    <div><span style="color:#aaa;">Bureau:</span> ${p.bureau_det}</div>
+    <div><span style="color:#aaa;">Type étude:</span> ${p.etude}</div>
+    <div><span style="color:#aaa;">État:</span> ${p.etat_d_ava}</div>
+    <div><span style="color:#aaa;">Créé par:</span> ${p.created_us}</div>
+    <div><span style="color:#aaa;">Date création:</span> ${formatDate(p.created_da)}</div>
+    <div><span style="color:#aaa;">Dernière édition:</span> ${p.last_edite}</div>
+    <div><span style="color:#aaa;">Surface:</span> ${p.st_area_sh}</div>
+  </div>`;
         layer.bindPopup(content);
       }
     });
   });
 
+  // POS
   $.getJSON('geojson/Pos.geojson', function(data) {
     layer4 = L.geoJSON(data, {
       style: { color: "#f39c12", weight: 2, fillOpacity: 0.1 },
@@ -166,7 +173,7 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     });
   });
 
-  // Handle button clicks
+  // Layer switcher
   function showLayer(layerName) {
     if (activeLayer && map.hasLayer(activeLayer)) {
       map.removeLayer(activeLayer);
@@ -179,12 +186,10 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       case 'pos': if (layer4) map.addLayer(layer4); activeLayer = layer4; break;
     }
 
-    // Update button UI
     $('#layer-buttons button').removeClass('active');
     $(`#layer-buttons button[data-layer="${layerName}"]`).addClass('active');
   }
 
-  // Event binding
   $('#layer-buttons button').on('click', function () {
     const selected = $(this).data('layer');
     showLayer(selected);
