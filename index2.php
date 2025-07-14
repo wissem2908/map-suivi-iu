@@ -63,7 +63,19 @@
     }
     .leaflet-popup-tip {
       background-color: #2c2c2c;
-    }
+    } 
+.geojson-label {
+  background-color: rgba(255, 255, 255, 0); /* fond semi-transparent */
+  color: #989898ff; /* couleur du texte */
+  font-size: 11px;
+letter-spacing: 4px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 0px solid #666;
+  box-shadow: 0px 0px 0px rgba(0, 0, 0, 0.0);
+  text-align: center;
+  white-space: nowrap;
+}
   </style>
 </head>
 <body>
@@ -102,12 +114,30 @@ L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_D
   let activeLayer = null;
 
   // Western Sahara boundary (separate from POS)
-  let westernSaharaLayer = null;
-  $.getJSON('geojson/M_Final.geojson', function(data) {
-    westernSaharaLayer = L.geoJSON(data, {
-      style: { color: "#333", weight: 1, fillOpacity: 0 }
-    }).addTo(map);
-  });
+$.getJSON('geojson/M_Final.geojson', function(data) {
+  // Add the GeoJSON layer
+  const westernSaharaLayer = L.geoJSON(data, {
+    style: { color: "#333", weight: 1, fillOpacity: 0 }
+  }).addTo(map);
+
+  // Compute the center of the entire layer
+  const bounds = westernSaharaLayer.getBounds();
+  const center = bounds.getCenter();
+
+const customLatLng = L.latLng(24.5, -13.5); // latitude, longitude
+
+L.tooltip({
+  permanent: true,
+  direction: 'center',
+  className: 'geojson-label'
+})
+.setContent('WESTERN SAHARA')
+.setLatLng(customLatLng)
+.addTo(map);
+
+
+});
+
 
   // Wilaya
   $.getJSON('geojson/wilaya.geojson', function(data) {
