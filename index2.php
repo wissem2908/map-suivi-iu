@@ -126,12 +126,6 @@
       maxZoom: 16
     }).addTo(map);
 
-    function formatDate(timestamp) {
-      if (!timestamp) return "N/A";
-      const date = new Date(timestamp);
-      return date.toLocaleDateString('fr-FR');
-    }
-
     let layer1, layer2, layer3, layer4;
     let wilayaLabels;
 
@@ -245,39 +239,38 @@
       });
     });
 
-    // Nouvelle fonction : toggle couche (pas remplacement)
     function toggleLayer(layerName, buttonElement) {
       let layer;
       switch (layerName) {
-        case 'wilaya':
-          layer = layer1;
-          break;
-        case 'commune':
-          layer = layer2;
-          break;
-        case 'pdau':
-          layer = layer3;
-          break;
-        case 'pos':
-          layer = layer4;
-          break;
+        case 'wilaya': layer = layer1; break;
+        case 'commune': layer = layer2; break;
+        case 'pdau': layer = layer3; break;
+        case 'pos': layer = layer4; break;
       }
 
       if (map.hasLayer(layer)) {
         map.removeLayer(layer);
         $(buttonElement).removeClass('active');
+        if (layerName === 'wilaya' && map.hasLayer(wilayaLabels)) {
+          map.removeLayer(wilayaLabels);
+        }
       } else {
         map.addLayer(layer);
         $(buttonElement).addClass('active');
-      }
-
-      if (layerName === 'wilaya') {
-        if (map.hasLayer(wilayaLabels)) {
-          map.removeLayer(wilayaLabels);
-        } else {
+        if (layerName === 'wilaya' && wilayaLabels) {
           map.addLayer(wilayaLabels);
         }
       }
+
+      reorderLayers();
+    }
+
+    function reorderLayers() {
+      if (layer1 && map.hasLayer(layer1)) layer1.bringToBack();
+      if (layer2 && map.hasLayer(layer2)) layer2.bringToFront();
+      if (layer3 && map.hasLayer(layer3)) layer3.bringToFront();
+      if (layer4 && map.hasLayer(layer4)) layer4.bringToFront();
+      if (wilayaLabels && map.hasLayer(wilayaLabels)) wilayaLabels.bringToFront();
     }
 
     $('#layer-buttons button').on('click', function () {
